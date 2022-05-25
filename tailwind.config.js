@@ -4,7 +4,8 @@
     theme: {
         extend: {
             colors: {
-                slack_bg: "#3F0F40"
+                slack_bg: "#3E103F",
+                slack_nav: "#2B092A"
             }
         },
     },

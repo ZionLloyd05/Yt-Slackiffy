@@ -1,3 +1,8 @@
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Hosting;
@@ -29,6 +34,22 @@ namespace Slackiffy
             services.AddRazorPages();
             services.AddServerSideBlazor();
             services.AddSingleton<WeatherForecastService>();
+
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
+            })
+            .AddCookie()
+            .AddGoogle(options =>
+            {
+                IConfigurationSection googleAuthNSection =
+                    Configuration.GetSection("Authentication:Google");
+
+                options.ClientId = googleAuthNSection["ClientId"];
+                options.ClientSecret = googleAuthNSection["ClientSecret"];
+                options.ClaimActions.MapJsonKey("urn:google:picture", "picture", "url");
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -47,6 +68,8 @@ namespace Slackiffy
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
+
+            app.UseAuthentication();
 
             app.UseRouting();
 
