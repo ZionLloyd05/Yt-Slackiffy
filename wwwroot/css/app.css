@@ -468,21 +468,6 @@ Ensure the default browser behavior of the `hidden` attribute.
   --tw-backdrop-sepia:  ;
 }
 
-.bg-red-500 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(239 68 68 / var(--tw-bg-opacity));
-}
-
-.bg-slack_bg {
-  --tw-bg-opacity: 1;
-  background-color: rgb(63 15 64 / var(--tw-bg-opacity));
-}
-
-.p-4 {
-  padding: 1rem;
-}
-
-.text-white {
-  --tw-text-opacity: 1;
-  color: rgb(255 255 255 / var(--tw-text-opacity));
+.flex {
+  display: flex;
 }
