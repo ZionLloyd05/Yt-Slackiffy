@@ -9,6 +9,12 @@
     <PackageReference Include="FirebaseAdmin" Version="2.3.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="5.0.10" />
     <PackageReference Include="TailBlazor.HeroIcons" Version="1.1.1" />
+    <PackageReference Include="Toolbelt.Web.CssClassInlineBuilder" Version="2.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Data\" />
+    <Folder Include="wwwroot\js\" />
   </ItemGroup>
 
 </Project>
