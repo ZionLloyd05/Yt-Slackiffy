@@ -1,6 +1,15 @@
 ﻿@page "/"
 
-<div class="flex h-screen w-full">
-    <Sidebar/>
-    <ChatContainer/>
-</div>
+<AuthorizeView>
+    <NotAuthorized>
+        <Login/>
+    </NotAuthorized>
+
+    <Authorized>
+        <NavMenu imgUrl="@context.User.Claims.Where(user => user.Type == "picture").FirstOrDefault().Value"/>
+        <div class="flex h-screen w-full">
+            <Sidebar/>
+            <ChatContainer/>
+        </div>
+    </Authorized>
+</AuthorizeView>
