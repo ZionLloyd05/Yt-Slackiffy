@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="5.0.1" />
+    <PackageReference Include="Toolbelt.Web.CssClassInlineBuilder" Version="2.0.0" />
   </ItemGroup>
 
 </Project>

@@ -1,7 +1,7 @@
 ﻿<div class="flex fixed justify-between bg-slack_nav w-full py-2 px-4 items-center">
     <div class="px-4">
-        <img src="@imgUrl" class="h-10 rounded-full cursor-pointer shadow" />
-        <div class="absolute bg-gray-200 flex flex-col rounded mt-1 p-2 text-sm z-50">
+        <img @onclick="@shouldShow" src="@imgUrl" class="h-10 rounded-full cursor-pointer shadow" />
+        <div class="@CssClass("absolute", "bg-gray-200", "flex", "flex-col", "rounded", "mt-1", "p-2", "text-sm", "z-50", new {hidden})">
             <a class="flex hover:bg-blue-200 px-4 py-2 cursor-pointer rounded" href="auth/signout">
                 <span class="iconify mr-2 mt-0.5" data-width="16" data-icon="mdi-light:logout" data-flip="horizontal"></span>
                 <span>Log Out</span>    
@@ -19,4 +19,15 @@
 @code {
     [Parameter]
     public string imgUrl { get; set; }
+    private bool hidden { get; set; }
+
+    protected override void OnInitialized()
+    {
+        this.hidden = true;
+    }
+
+    protected void shouldShow(MouseEventArgs e)
+    {
+        hidden = !hidden;
+    }
 }
