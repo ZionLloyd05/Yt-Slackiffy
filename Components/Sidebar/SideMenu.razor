@@ -1,6 +1,6 @@
 ﻿<div class="w-4/5 flex overflow-y-scroll scrollbar">
     <div class="w-full">
-        <TeamAccountInfo/>
+        <TeamAccountInfo UserName="@UserName"/>
 
         <div class="">
             <ul class="py-2">
@@ -80,5 +80,6 @@
 </div>
 
 @code {
-
+    [Parameter]
+    public string UserName { get; set; }
 }

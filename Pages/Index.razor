@@ -1,13 +1,14 @@
 ﻿@page "/"
+@using System.Security.Claims
 
 <AuthorizeView>
     <NotAuthorized>
         <Login/>
     </NotAuthorized>
     <Authorized>
-        <NavMenu imgUrl = "@context.User.Claims.Where(c => c.Type == "picture").FirstOrDefault().Value" />
+        <NavMenu imgUrl="@context.User.Claims.Where(c => c.Type == "picture").FirstOrDefault().Value"/>
         <div class="flex h-screen w-full">
-           <Sidebar/>
+           <Sidebar UserName="@context.User.Claims.Where(c => c.Type == ClaimTypes.Name).FirstOrDefault().Value"/>
            <ChatContainer/>
         </div>
     </Authorized>

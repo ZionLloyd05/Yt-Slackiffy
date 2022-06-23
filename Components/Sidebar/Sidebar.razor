@@ -1,8 +1,9 @@
 ﻿<div class="flex pt-[50px] bg-slack_bg shadow-inner w-1/4">
     <TeamAccount/>
-    <SideMenu/>
+    <SideMenu UserName="@UserName"/>
 </div>
 
 @code {
-
+    [Parameter]
+    public string UserName { get; set; }
 }
