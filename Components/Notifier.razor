@@ -1,27 +1,32 @@
-﻿<div class="@CssClass("bg-slack_bg", "top-32", "right-5", "flex", "items-center", "justify-left", "rounded", "p-2", "m-2", "w-72", new { hidden })">
-    <span class="text-green-500">
-    <svg viewBox="0 0 20 20" fill="currentColor" class="check-circle w-6 h-6">
-        <path fill-rule="evenodd"
-        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-        clip-rule="evenodd"></path>
-    </svg>
-    </span>
-    <span class="text-md text-white mx-5">
-    @Username is online...
-    </span>
-    <span class="text-gray-400 cursor-pointer" @onclick="@closeNotifier">
-        <svg viewBox="0 0 20 20" fill="currentColor" class="x w-6 h-6">
+﻿@if (!String.IsNullOrEmpty(Username))
+{
+    <div class="@CssClass("bg-slack_bg", "top-32", "right-5", "flex", "items-center", "justify-left", "rounded", "p-2", "m-2", "w-72", new { hidden })">
+        <span class="text-green-500">
+        <svg viewBox="0 0 20 20" fill="currentColor" class="check-circle w-6 h-6">
             <path fill-rule="evenodd"
-            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
             clip-rule="evenodd"></path>
         </svg>
-    </span>
-</div>
+        </span>
+        <span class="text-md text-white mx-5">
+        @Username is online...
+        </span>
+        <span class="text-gray-400 cursor-pointer" @onclick="@closeNotifier">
+            <svg viewBox="0 0 20 20" fill="currentColor" class="x w-6 h-6">
+                <path fill-rule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clip-rule="evenodd"></path>
+            </svg>
+        </span>
+    </div>
+}
+
+
 
 @code {
     [Parameter]
     public string Username { get; set; }
-
+    
     [Parameter]
     public bool Show { get; set; }
 
