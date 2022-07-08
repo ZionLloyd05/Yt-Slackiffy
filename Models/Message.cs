@@ -10,12 +10,11 @@ namespace Slackiffy.Models
     {
         [Key]
         public int Id { get; set; }
-        public string Username { get; set; }
-        public string Text { get; set; }
-        public DateTime When { get; set; }
-        public int ParentMessageId { get; set; }
-        public ICollection<Message> Responses { get; set; }
-        public int UserId { get; set; }
-        public int RecieverId { get; set; }
+        public int FromUserId { get; set; }
+        public int ToUserId { get; set; }
+        public string Chat { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public virtual User FromUser { get; set; }
+        public virtual User ToUser { get; set; }
     }
 }

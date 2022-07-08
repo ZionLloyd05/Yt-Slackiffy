@@ -1,21 +1,20 @@
-﻿<div class="w-3/4 mt-[60px]">
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.SignalR.Client
+@using Slackiffy.Data
+@using System.Net
+@inject NavigationManager NavigationManager
+
+
+@attribute [Authorize]
+
+<div class="w-3/4 mt-[60px]">
     <div class="flex flex-col">
         @*Header*@
         <ChatHeader/>
+        <Notifier/>
 
         @*Chat Messages*@
         <div class="flex h-[35rem] overflow-y-scroll scrollbar relative flex-col-reverse">
-            <Message/>
-            <Message/>
-            <Message/>
-            <Message/>
-            <Message/>
-            <Message/>
-            <Message/>
-            <Message/>
-            <Message/>
-            <Message/>
-            <Message/>
             <Message/>
         </div>
 
@@ -25,5 +24,50 @@
 </div>
 
 @code {
+      private HubConnection hubConnection;
+    private List<Message> userMessages = new();
 
+    private string ReceiverConnectionId = String.Empty;
+
+    public bool IsConnected => hubConnection.State == HubConnectionState.Connected;
+    public string ConnectionId => hubConnection.ConnectionId;
+    
+    [Inject]
+    public CookiesProvider CookiesProvider { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        var container = new System.Net.CookieContainer();
+        var cookie = new Cookie() 
+        {
+            Name = "SlackiffyAuthCookie", 
+            Domain = "localhost",
+            Value = CookiesProvider.Cookie
+        };
+
+        container.Add(cookie); 
+        
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("/chat"), options =>
+            {
+                options.Cookies = container;  
+            }).Build();
+
+        
+        
+        await hubConnection.StartAsync();
+        //await hubConnection.InvokeAsync("InitializeUserList");
+    }
+
+    public void SetRecieverConnection(string connId)
+    {
+        this.ReceiverConnectionId = connId;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
 }

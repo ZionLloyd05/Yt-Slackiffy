@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Slackiffy.Extensions;
+using Slackiffy.Hubs;
 
 namespace Slackiffy
 {
@@ -42,13 +43,16 @@ namespace Slackiffy
             app.UseStaticFiles();
 
             app.UseRouting();
+            
             app.UseAuthentication();
+            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");
+                endpoints.MapHub<ChatHub>("/chat");
             });
         }
     }

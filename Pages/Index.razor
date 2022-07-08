@@ -1,19 +1,86 @@
 ﻿@page "/"
 @using System.Security.Claims
+@using Microsoft.AspNetCore.SignalR.Client
+@using Slackiffy.Data
+@inject NavigationManager NavigationManager
+@inject ConnectionManager ConnectionManager
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Net  
+@inject AuthenticationStateProvider authProvider 
+
+@*@implements IAsyncDisposable*@
 
 <AuthorizeView>
     <NotAuthorized>
         <Login/>
     </NotAuthorized>
     <Authorized>
-        <NavMenu imgUrl="@context.User.Claims.Where(c => c.Type == "picture").FirstOrDefault().Value"/>
-        <div class="flex h-screen w-full">
-           <Sidebar UserName="@context.User.Claims.Where(c => c.Type == ClaimTypes.Name).FirstOrDefault().Value"/>
-           <ChatContainer/>
-        </div>
+        <CascadingValue Value="@context.User.Claims.Where(c => c.Type == ClaimTypes.Name).FirstOrDefault().Value">
+            <NavMenu imgUrl="@context.User.Claims.Where(c => c.Type == "picture").FirstOrDefault().Value"/>
+            <div class="flex h-screen w-full">
+               <Sidebar/>
+               <ChatContainer/>
+            </div>
+        </CascadingValue>
     </Authorized>
 </AuthorizeView>
 
 @code {
     private string userImageUrl { get; set; }
+
+    private string userName;
+
+
+    private HubConnection hubConnection;
+    private List<Message> userMessages = new();
+
+    private string ReceiverConnectionId = String.Empty;
+
+    public bool IsConnected => hubConnection.State == HubConnectionState.Connected;
+    public string ConnectionId => hubConnection.ConnectionId;
+    
+    //[Inject]
+    //public CookiesProvider CookiesProvider { get; set; }
+    //protected override async Task OnInitializedAsync()
+    //{
+    //    var container = new System.Net.CookieContainer();
+    //    var cookie = new Cookie() 
+    //    {
+    //        Name = "SlackiffyAuthCookie", 
+    //        Domain = "localhost",
+    //        Value = CookiesProvider.Cookie
+    //    };
+
+    //    container.Add(cookie); 
+        
+    //    hubConnection = new HubConnectionBuilder()
+    //        .WithUrl(NavigationManager.ToAbsoluteUri("/chat"), options =>
+    //        {
+    //            options.Cookies = container;  
+    //        }).Build();
+
+            
+    //    //hubConnection.On<Dictionary<string, HashSet<string>>>("ReceiveInitializeUserList", ( list) =>
+    //    //{
+    //    //    this.UserList = list ;
+
+    //    //    InvokeAsync(() => StateHasChanged());
+    //    //});
+        
+    //    await hubConnection.StartAsync();
+    //    //await hubConnection.InvokeAsync("InitializeUserList");
+    //}
+
+    //public void SetRecieverConnection(string connId)
+    //{
+    //    this.ReceiverConnectionId = connId;
+    //}
+
+    //public async ValueTask DisposeAsync()
+    //{
+    //    if (hubConnection is not null)
+    //    {
+    //        await hubConnection.DisposeAsync();
+    //    }
+    //}
 }

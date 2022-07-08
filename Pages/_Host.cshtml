@@ -5,6 +5,10 @@
     Layout = null;
 }
 
+@{
+    var cookie = HttpContext.Request.Cookies["SlackiffyAuthCookie"];
+}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,7 +19,7 @@
     <link href="css/app.css" rel="stylesheet" />
 </head>
 <body class="font-serif">
-    <component type="typeof(App)" render-mode="ServerPrerendered" />
+    <component type="typeof(App)" render-mode="ServerPrerendered"  param-Cookie="cookie"/>
     <script src="_framework/blazor.server.js"></script>
     <script src="https://code.iconify.design/2/2.2.1/iconify.min.js"></script>
 </body>

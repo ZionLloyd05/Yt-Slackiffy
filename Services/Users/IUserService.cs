@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Slackiffy.Repository.Users
+namespace Slackiffy.Services.Users
 {
-    public interface IUserRepository
+    public interface IUserService
     {
         ValueTask<User> RegisterUser(User user);
 

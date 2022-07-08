@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Slackiffy.Models;
-using Slackiffy.Repository.Users;
+using Slackiffy.Services.Users;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -17,12 +18,20 @@ namespace Slackiffy.APIs
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly IUserRepository repository;
+        private readonly IUserService repository;
 
-        public AuthController(IUserRepository repository)
+        public AuthController(IUserService repository)
         {
             this.repository = repository;
         }
+
+        [Authorize]
+        [HttpGet("testurl")]
+        public string He() => "Hello world";
+
+        [AllowAnonymous]
+        [HttpGet("test")]
+        public string Hello() => "Hello world";
 
         [HttpGet("google-login")]
         public async Task LoginAsync()

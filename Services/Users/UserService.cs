@@ -5,13 +5,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Slackiffy.Repository.Users
+namespace Slackiffy.Services.Users
 {
-    public class UserRepository : IUserRepository
+    public class UserService : IUserService
     {
         private readonly SlackiffyDbContext context;
 
-        public UserRepository(SlackiffyDbContext context)
+        public UserService(SlackiffyDbContext context)
         {
             this.context = context;
         }
