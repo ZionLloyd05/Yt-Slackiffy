@@ -3,7 +3,10 @@
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @{
     Layout = null;
+    var cookie = HttpContext.Request.Cookies["SlackiffyAuthCookie"];
 }
+
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -15,7 +18,7 @@
     <link href="css/app.css" rel="stylesheet" />
 </head>
 <body>
-    <component type="typeof(App)" render-mode="ServerPrerendered" />
+    <component type="typeof(App)" render-mode="ServerPrerendered" param-Cookie="cookie" />
     <script src="_framework/blazor.server.js"></script>
 </body>
 <script src="https://code.iconify.design/2/2.2.1/iconify.min.js"></script>

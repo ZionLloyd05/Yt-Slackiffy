@@ -1,35 +1,150 @@
-﻿<ul>
-      <li class="py-2 pl-4 cursor-pointer">
-            <div class="flex">
-                <span class="iconify text-white font-semibold mr-1 mt-1" data-icon="ant-design:caret-down" 
-                data-width="18"></span>
-                <h2 class="text-base text-white">Channels</h2>
-            </div>
-        </li>
-</ul>
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.SignalR
+@using Microsoft.AspNetCore.SignalR.Client
+@using System.Net
+@using Slackiffy.Models.DTOs
+@inject NavigationManager NavigationManager
+@implements IAsyncDisposable;
 
-<ul>
-      <li class="py-2 pl-4 cursor-pointer hover:bg-neutral-900/50">
-            <div class="flex">
-                <span class="iconify text-white font-semibold mr-1 mt-1" data-icon="akar-icons:plus" 
-                data-width="18"></span>
-                <h2 class="text-base text-white">Add Channel</h2>
-            </div>
-        </li>
+<AuthorizeView>
+    <ul>
+          <li class="py-2 pl-4 cursor-pointer">
+                <div class="flex">
+                    <span class="iconify text-white font-semibold mr-1 mt-1" data-icon="ant-design:caret-down" 
+                    data-width="18"></span>
+                    <h2 class="text-base text-white">Channels</h2>
+                </div>
+            </li>
+    </ul>
 
-         <li class="py-2 pl-4 cursor-pointer hover:bg-neutral-900/50">
-            <div class="flex">
-                <span class="iconify text-white font-semibold mr-1 mt-1" data-icon="ph:hash" 
-                data-width="18"></span>
-                <h2 class="text-base text-white">design-team</h2>
-            </div>
-        </li>
+    <ul>
+          <li class="py-2 pl-4 cursor-pointer hover:bg-neutral-900/50">
+                <div class="flex">
+                    <span class="iconify text-white font-semibold mr-1 mt-1" data-icon="akar-icons:plus" 
+                    data-width="18"></span>
+                    <h2 class="text-base text-white">Add Channel</h2>
+                </div>
+            </li>
 
-        <li class="py-2 pl-4 cursor-pointer hover:bg-neutral-900/50">
-            <div class="flex">
-                <span class="iconify text-white font-semibold mr-1 mt-1" data-icon="ph:hash" 
-                data-width="18"></span>
-                <h2 class="text-base text-white">blazor-engineering</h2>
-            </div>
-        </li>
-</ul>
+             <li class="py-2 pl-4 cursor-pointer hover:bg-neutral-900/50">
+                <div class="flex">
+                    <span class="iconify text-white font-semibold mr-1 mt-1" data-icon="ph:hash" 
+                    data-width="18"></span>
+                    <h2 class="text-base text-white">design-team</h2>
+                </div>
+            </li>
+
+            <li class="py-2 pl-4 cursor-pointer hover:bg-neutral-900/50">
+                <div class="flex">
+                    <span class="iconify text-white font-semibold mr-1 mt-1" data-icon="ph:hash" 
+                    data-width="18"></span>
+                    <h2 class="text-base text-white">blazor-engineering</h2>
+                </div>
+            </li>
+    </ul>
+
+    <ul>
+          <li class="py-2 pl-4 cursor-pointer">
+                <div class="flex">
+                    <span class="iconify text-white font-semibold mr-1 mt-1" data-icon="ant-design:caret-down" 
+                    data-width="18"></span>
+                    <h2 class="text-base text-white">Direct Messages</h2>
+                </div>
+            </li>
+    </ul>
+
+    <ul>
+          <li class="py-2 pl-4 cursor-pointer hover:bg-neutral-900/50">
+                <div class="flex">
+                    <span class="iconify text-white font-semibold mr-2 mt-1" data-icon="carbon:user-online" 
+                    data-width="20"></span>
+                    <h2 class="text-base text-white">@context.User.Claims.Where(c => c.Type == ClaimTypes.Name).SingleOrDefault().Value</h2>
+                </div>
+            </li>
+            @foreach (var user in previousChatUserList)
+           {
+                @if(user.Email != context.User.Claims.Where(c => c.Type == ClaimTypes.Email).SingleOrDefault().Value)
+                {
+                    <li class="py-2 pl-4 cursor-pointer hover:bg-neutral-900/50">
+                    <div class="flex">
+                        <span class="iconify text-white font-semibold mr-2 mt-1" data-icon="carbon:user-online" 
+                        data-width="20"></span>
+                        <h2 class="text-base text-white">@user.Username</h2>
+                    </div>
+                </li>
+                }
+            }
+    </ul>
+</AuthorizeView>
+
+@code {
+    private HubConnection hubConnection;
+    private Dictionary<string, HashSet<string>> UserListing;
+    private ICollection<UsersForListingDTO> previousChatUserList
+        = new List<UsersForListingDTO>();
+
+    [Inject]
+    public CookiesProvider cookiesProvider { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var container = new CookieContainer();
+        var cookie = new Cookie()
+            {
+                Name = "SlackiffyAuthCookie",
+                Domain = "localhost",
+                Value = cookiesProvider.Cookie
+            };
+
+        container.Add(cookie);
+
+        if(cookiesProvider.Cookie == null)
+        {
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(NavigationManager.ToAbsoluteUri("/chat"))
+                .Build();
+        }
+        else{
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(NavigationManager.ToAbsoluteUri("/chat"), option => option.Cookies = container)
+                .Build();
+        }
+
+        hubConnection.On<Dictionary<string, HashSet<string>>>("ReceiveInitializeUserList", (list) =>
+        {
+            foreach (var user in list)
+            {
+
+                var dataArray = user.Key.Split("-");
+                var userEmail = dataArray[0];
+                var userName = dataArray[1];
+
+                this.previousChatUserList.Add(new UsersForListingDTO
+                {
+                    Email = userEmail,
+                    Username = userName
+
+                });
+            }
+
+            InvokeAsync(() => StateHasChanged());
+        });
+
+        hubConnection.On<string>("UserDisconnected", email =>
+        {
+            var user = this.previousChatUserList.Where(user => user.Email == email).SingleOrDefault();
+
+            this.previousChatUserList.Remove(user);
+            InvokeAsync(() => StateHasChanged());
+        });
+
+        await hubConnection.StartAsync();
+        await hubConnection.InvokeAsync("InitializeUserList");
+    }
+
+    public async ValueTask DisposeAsync(){
+        if(hubConnection is not null){
+            await hubConnection.DisposeAsync();
+        }
+    }
+}
