@@ -51,14 +51,17 @@ namespace Slackiffy.Hubs
         {            
             var connectionId = GetConnectionId();
 
-            var userEmail = Context.User.Claims
-                .Where(claim => claim.Type == ClaimTypes.Email).FirstOrDefault().Value;
             var userName = Context.User.Claims
-                .Where(claim => claim.Type == ClaimTypes.Name).FirstOrDefault().Value;
+                .Where(claim => claim.Type == ClaimTypes.Name).SingleOrDefault().Value;
+            var userId = Context.User.Claims
+                .Where(claim => claim.Type == ClaimTypes.NameIdentifier).SingleOrDefault().Value;
 
-            var conKey = $"{userEmail}-{userName}";
+            var conKey = $"{userName}-{userId}";
 
             var connections = this.connManager.GetConnections(conKey);
+
+            this.connManager.Add(conKey, connectionId);
+            await base.OnConnectedAsync();
 
             //if (!connections.Any())
             //{
@@ -74,25 +77,22 @@ namespace Slackiffy.Hubs
             //    //await Clients.All.SendAsync("JoinedUser", newUser);
             //}
 
-            this.connManager.Add(conKey, connectionId);
-            await base.OnConnectedAsync();
         }
-
 
         public override async Task OnDisconnectedAsync(Exception exception)
         {
-            var userEmail = Context.User.Claims
-                .Where(claim => claim.Type == ClaimTypes.Email).FirstOrDefault().Value;
             var userName = Context.User.Claims
-                .Where(claim => claim.Type == ClaimTypes.Name).FirstOrDefault().Value;
+                .Where(claim => claim.Type == ClaimTypes.Name).SingleOrDefault().Value;
+            var userId = Context.User.Claims
+                .Where(claim => claim.Type == ClaimTypes.NameIdentifier).SingleOrDefault().Value;
 
-            var conKey = $"{userEmail}-{userName}";
+            var conKey = $"{userName}-{userId}";
 
             var connectionId = GetConnectionId();
 
             this.connManager.Remove(conKey, connectionId);
 
-            await Clients.All.SendAsync("UserDisconnected", userEmail);
+            await Clients.All.SendAsync("UserDisconnected", userId);
             await base.OnDisconnectedAsync(exception);
         }
 

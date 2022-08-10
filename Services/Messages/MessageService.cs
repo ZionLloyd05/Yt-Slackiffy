@@ -30,7 +30,7 @@ namespace Slackiffy.Services.Messages
                 .Include(msg => msg.ToUser)
                 .Select(user => new UsersForListingDTO
                 {
-                    Email = user.ToUser.Email,
+                    UserId = user.ToUser.UserNameId,
                     Username = user.ToUser.Username,
                     Picture = user.ToUser.Picture
                 })

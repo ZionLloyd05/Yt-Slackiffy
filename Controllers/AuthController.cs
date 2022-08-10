@@ -25,14 +25,6 @@ namespace Slackiffy.APIs
             this.repository = repository;
         }
 
-        [Authorize]
-        [HttpGet("testurl")]
-        public string He() => "Hello world";
-
-        [AllowAnonymous]
-        [HttpGet("test")]
-        public string Hello() => "Hello world";
-
         [HttpGet("google-login")]
         public async Task LoginAsync()
         {
@@ -74,18 +66,19 @@ namespace Slackiffy.APIs
         {
             string email = result.Principal.FindFirst(ClaimTypes.Email).Value;
             string username = result.Principal.FindFirst(ClaimTypes.Name).Value;
+            string userNameId = result.Principal.FindFirst(ClaimTypes.NameIdentifier).Value;
             string picture = User.Claims.Where(c => c.Type == "picture").FirstOrDefault().Value;
-            string name = User.Claims.Where(c => c.Type == ClaimTypes.Name).FirstOrDefault().Value;
 
             var user = new User
             {
                 Username = username,
                 Email = email,
                 Picture = picture,
+                UserNameId = userNameId,
                 DateJoined = DateTime.Now
             };
 
-            await this.repository.RegisterUser(user);
+            var savedUser = await this.repository.RegisterUser(user);
         }
     }
 }

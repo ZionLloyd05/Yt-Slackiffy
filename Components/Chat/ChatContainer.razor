@@ -2,15 +2,17 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @using Slackiffy.Data
 @using System.Net
+@using Slackiffy.Extensions
+@using Slackiffy.Services.Messages
+@using Slackiffy.Services.Users
 @inject NavigationManager NavigationManager
-
-
-@attribute [Authorize]
+@inject IUserService userService
+@inject IMessageService messageService
 
 <div class="w-3/4 mt-[60px]">
     <div class="flex flex-col">
         @*Header*@
-        <ChatHeader/>
+        <ChatHeader HeaderTitle="@ChatHeadTitle"/>
         <Notifier/>
 
         @*Chat Messages*@
@@ -24,50 +26,58 @@
 </div>
 
 @code {
-      private HubConnection hubConnection;
+    [CascadingParameter]
+    public string ResourceParam { get; set; } = String.Empty;
+    public string PreviousResourceParam { get; set; }
+
+    public string ChatHeadTitle { get; set; } = "Hey buddy, Slack on 😀!";
+
+    private HubConnection hubConnection;
     private List<Message> userMessages = new();
 
     private string ReceiverConnectionId = String.Empty;
 
     public bool IsConnected => hubConnection.State == HubConnectionState.Connected;
     public string ConnectionId => hubConnection.ConnectionId;
-    
+
     [Inject]
     public CookiesProvider CookiesProvider { get; set; }
+
+    protected override void OnInitialized()
+    {
+        this.PreviousResourceParam = this.ResourceParam;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        Console.WriteLine("I re-rendered man in chat container");
+        Console.WriteLine($"is first rendered: {firstRender}");
+
+        if (String.IsNullOrEmpty(this.ResourceParam) 
+        || this.ResourceParam == this.PreviousResourceParam) return;
+
+        this.PreviousResourceParam = this.ResourceParam;
+
+        var resourceArray = this.ResourceParam.Split("-");
+        var resourceKey = resourceArray[0];
+        var resourceId = resourceArray[1];
+
+        switch (resourceKey)
+        {
+            case "DM":
+                var userInfo = await this.userService.GetUserById(resourceId);
+                this.ChatHeadTitle = userInfo.Username.ToSentenceCase();
+                StateHasChanged();
+                break;
+            case "CH":
+                break;
+            default:
+                break;
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
-        var container = new System.Net.CookieContainer();
-        var cookie = new Cookie() 
-        {
-            Name = "SlackiffyAuthCookie", 
-            Domain = "localhost",
-            Value = CookiesProvider.Cookie
-        };
 
-        container.Add(cookie); 
-        
-        hubConnection = new HubConnectionBuilder()
-            .WithUrl(NavigationManager.ToAbsoluteUri("/chat"), options =>
-            {
-                options.Cookies = container;  
-            }).Build();
-
-        
-        
-        await hubConnection.StartAsync();
-        //await hubConnection.InvokeAsync("InitializeUserList");
-    }
-
-    public void SetRecieverConnection(string connId)
-    {
-        this.ReceiverConnectionId = connId;
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (hubConnection is not null)
-        {
-            await hubConnection.DisposeAsync();
-        }
     }
 }

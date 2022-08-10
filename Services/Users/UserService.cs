@@ -16,10 +16,10 @@ namespace Slackiffy.Services.Users
             this.context = context;
         }
 
-        public async ValueTask<User> GetUserById(int Id)
+        public async ValueTask<User> GetUserById(string userId)
         {
             var userInDb = await this.context.Users
-                .Where(user => user.Id == Id)
+                .Where(user => user.UserNameId == userId)
                 .SingleOrDefaultAsync();
 
             return userInDb;

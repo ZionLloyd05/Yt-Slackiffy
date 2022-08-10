@@ -37,18 +37,6 @@
                             <h2 class="text-base text-white">Mentions & reactions</h2>
                         </div>
                     </li>
-                    @*<li class="py-2 pl-4 cursor-pointer hover:bg-neutral-900/50">
-                        <div class="flex">
-                            <span class="iconify text-white mt-1 mr-1" data-icon="fluent:bookmark-16-regular" data-width="22"></span>
-                            <h2 class="text-base text-white">Channel browser</h2>
-                        </div>
-                    </li>
-                    <li class="py-2 pl-4 cursor-pointer hover:bg-neutral-900/50">
-                        <div class="flex">
-                            <span class="iconify text-white mt-1 mr-2" data-icon="fe:app-menu" data-width="22"></span>
-                            <h2 class="text-base text-white">Apps</h2>
-                        </div>
-                    </li>*@
                     <li class="py-2 pl-4 cursor-pointer hover:bg-neutral-900/50">
                         <div class="flex">
                             <span class="iconify text-white mt-1 mr-2" data-icon="material-symbols:file-copy-outline-rounded" data-width="22"></span>
@@ -93,23 +81,30 @@
                     </li>
                 </ul>
                <ul class="py-2">
-                   <li class="py-2 pl-4 cursor-pointer hover:bg-neutral-900/50">
-                        <div class="flex">
-                            <span class="iconify mt-1 mr-2" data-icon="carbon:user-online" style="color: white;" data-width="20"></span>
-                            <h2 class="text-base text-white">@context.User.Claims.Where(c => c.Type == ClaimTypes.Name).SingleOrDefault().Value</h2>
-                        </div>
-                    </li>
                     @foreach (var user in previousChatUserList)
                     {
-                    
-                        @if(user.Email != context.User.Claims.Where(c => c.Type == ClaimTypes.Email).SingleOrDefault().Value)
+                        var userId = context.User.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).SingleOrDefault()?.Value;
+                        var username = context.User.Claims.Where(c => c.Type == ClaimTypes.Name).SingleOrDefault().Value;
+
+                        @if(user.UserId == userId)
                         {
-                        <li class="py-2 pl-4 cursor-pointer hover:bg-neutral-900/50">
-                            <div class="flex">
-                                <span class="iconify mt-1 mr-2" data-icon="carbon:user-online" style="color: white;" data-width="20"></span>
-                                <h2 class="text-base text-white">@user.Username</h2>
-                            </div>
-                        </li>
+                            var url = $"/client/DM-{userId}";
+                            <li class="py-2 pl-4 cursor-pointer hover:bg-neutral-900/50">
+                                <NavLink class="nav-link flex text-white" href="@url">
+                                    <span class="iconify mt-1 mr-2" data-icon="carbon:user-online" style="color: white;" data-width="20"></span>
+                                    @username
+                                </NavLink>
+                            </li>
+                        }
+                        @if(user.UserId != userId)
+                        {
+                            var url = $"/client/DM-{userId}";
+                            <li class="py-2 pl-4 cursor-pointer hover:bg-neutral-900/50">
+                                <NavLink class="nav-link flex text-white" href="@url">
+                                    <span class="iconify mt-1 mr-2" data-icon="carbon:user-online" style="color: white;" data-width="20"></span>
+                                    @username
+                                </NavLink>
+                            </li>
                         }
                     }
                 </ul>
@@ -119,18 +114,17 @@
 </AuthorizeView>
 
 @code {
-    [Parameter]
-    public string UserName { get; set; }
+    public bool IsActive { get; set; } = false;
 
     private HubConnection hubConnection;
     private Dictionary<string, HashSet<string>> UserList;
-    private ICollection<UsersForListingDTO> previousChatUserList 
+    private ICollection<UsersForListingDTO> previousChatUserList { get; set; }
         = new List<UsersForListingDTO>();
 
     [Inject]
     public CookiesProvider CookiesProvider { get; set; }
     protected override async Task OnInitializedAsync()
-    {        
+    {
         var container = new System.Net.CookieContainer();
         var cookie = new Cookie() 
         {
@@ -156,9 +150,9 @@
             }).Build();
         }
 
-        hubConnection.On<string>("UserDisconnected", email =>
+        hubConnection.On<string>("UserDisconnected", userId =>
         {
-            var user = this.previousChatUserList.Where(u => u.Email == email).SingleOrDefault();
+            var user = this.previousChatUserList.Where(u => u.UserId == userId).FirstOrDefault();
 
             this.previousChatUserList.Remove(user);
 
@@ -170,15 +164,21 @@
             foreach (var user in list)
             {
                 var dataArray = user.Key.Split("-");
-                var userEmail = dataArray[0];
-                var userName = dataArray[1];
+                var userName = dataArray[0];
+                var userId = dataArray[1];
 
-                this.previousChatUserList.Add(new UsersForListingDTO
+                var userExist = this.previousChatUserList.Any(user => user.UserId == userId);
+
+                if(!userExist)
                 {
-                    Email = userEmail,
-                    Username = userName,
-                    Picture = ""
-                });
+                     this.previousChatUserList.Add(new UsersForListingDTO
+                        {
+                            UserId = userId,
+                            Username = userName,
+                            Picture = ""
+                        });
+                }
+               
             }
 
             InvokeAsync(() => StateHasChanged());
@@ -192,22 +192,6 @@
         await hubConnection.StartAsync();
         await hubConnection.InvokeAsync("InitializeUserList");
     }
-
-    //protected override async Task OnAfterRenderAsync(bool firstRender)
-    //{
-
-    //    var auth = await this.authProvider.GetAuthenticationStateAsync();
-    //    var userEmail = auth.User.Claims
-    //        .Where(claim => claim.Type == ClaimTypes.Email)
-    //        .FirstOrDefault().Value;
-
-    //    previousChatUserList = this.messagingService
-    //        .GetAllUsersWithPastConversation(userEmail);
-
-    //    if (previousChatUserList.Count > 0) StateHasChanged();
-
-    //    await base.OnAfterRenderAsync(firstRender);
-    //}
 
     public async ValueTask DisposeAsync()
     {

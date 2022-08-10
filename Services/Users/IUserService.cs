@@ -8,7 +8,7 @@ namespace Slackiffy.Services.Users
     {
         ValueTask<User> RegisterUser(User user);
 
-        ValueTask<User> GetUserById(int Id);
+        ValueTask<User> GetUserById(string userId);
 
         ValueTask<ICollection<User>> GetUsers();
 
