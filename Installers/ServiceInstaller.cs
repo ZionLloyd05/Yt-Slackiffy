@@ -22,7 +22,6 @@ namespace Slackiffy.Installers
             });
             service.AddRazorPages();
             service.AddServerSideBlazor();
-            service.AddSingleton<ConnectionManager>();
             service.AddScoped<IUserService, UserService>();
         }
     }

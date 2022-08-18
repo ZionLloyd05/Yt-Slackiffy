@@ -5,10 +5,10 @@ using System.Linq;
 
 namespace Slackiffy.Data
 {
-    public class ConnectionManager
+    public class ConnectionManager<T>
     {
-        private readonly Dictionary<string, HashSet<string>> _connections =
-            new Dictionary<string, HashSet<string>>();
+        private readonly Dictionary<T, HashSet<string>> _connections =
+            new Dictionary<T, HashSet<string>>();
 
         public int Count
         {
@@ -18,15 +18,15 @@ namespace Slackiffy.Data
             }
         }
 
-        public void Add(string conKey, string connectionId)
+        public void Add(T key, string connectionId)
         {
             lock (_connections)
             {
                 HashSet<string> connections;
-                if (!_connections.TryGetValue(conKey, out connections))
+                if (!_connections.TryGetValue(key, out connections))
                 {
                     connections = new HashSet<string>();
-                    _connections.Add(conKey, connections);
+                    _connections.Add(key, connections);
                 }
 
                 lock (connections)
@@ -36,26 +36,10 @@ namespace Slackiffy.Data
             }
         }
 
-        public string GetConnection(string key)
-        {
-            var connection = _connections[key];
-            if (connection != null)
-            {
-                return connection.ToString();
-            }
-
-            return String.Empty;
-        }
-
-        public Dictionary<string, HashSet<string>> GetUsers()
-        {
-            return _connections;
-        }
-
-        public IEnumerable<string> GetConnections(string conKey)
+        public IEnumerable<string> GetConnections(T key)
         {
             HashSet<string> connections;
-            if (_connections.TryGetValue(conKey, out connections))
+            if (_connections.TryGetValue(key, out connections))
             {
                 return connections;
             }
@@ -63,12 +47,17 @@ namespace Slackiffy.Data
             return Enumerable.Empty<string>();
         }
 
-        public void Remove(string conKey, string connectionId)
+        public IEnumerable<T> GetUsers()
+        {
+            return _connections.Keys.ToList<T>();
+        }
+
+        public void Remove(T key, string connectionId)
         {
             lock (_connections)
             {
                 HashSet<string> connections;
-                if (!_connections.TryGetValue(conKey, out connections))
+                if (!_connections.TryGetValue(key, out connections))
                 {
                     return;
                 }
@@ -79,7 +68,7 @@ namespace Slackiffy.Data
 
                     if (connections.Count == 0)
                     {
-                        _connections.Remove(conKey);
+                        _connections.Remove(key);
                     }
                 }
             }

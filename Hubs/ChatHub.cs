@@ -11,18 +11,17 @@ namespace Slackiffy.Hubs
 {
     public class ChatHub : Hub
     {
-        private readonly ConnectionManager conManager;
         private readonly IUserService userService;
+        private readonly static ConnectionManager<string> conManager = new ConnectionManager<string>();
 
-        public ChatHub(ConnectionManager conManager, IUserService userService)
+        public ChatHub(IUserService userService)
         {
-            this.conManager = conManager;
             this.userService = userService;
         }
 
         public async Task InitializeUserList()
         {
-            var list = this.conManager.GetUsers();
+            var list = conManager.GetUsers();
 
             await Clients.All.SendAsync("ReceiveInitializeUserList", list);
         }
@@ -33,7 +32,7 @@ namespace Slackiffy.Hubs
                 .Where(claim => claim.Type == ClaimTypes.Email).FirstOrDefault().Value;
 
             var connectionId = GetConnectionId();
-            this.conManager.Add(currentUser, connectionId);
+            conManager.Add(currentUser, connectionId);
         }
 
         public override async Task OnConnectedAsync()
@@ -51,14 +50,14 @@ namespace Slackiffy.Hubs
                 {
                     var conkey = $"{userEmail}-{userName}";
 
-                    this.conManager.Add(conkey, connectionId);
+                    conManager.Add(conkey, connectionId);
                 }
-                    
-                await base.OnConnectedAsync();
+
+                await Task.CompletedTask;
             }
             catch (Exception)
             {
-                await base.OnConnectedAsync();
+                await Task.CompletedTask;
             }
            
         }
@@ -76,12 +75,12 @@ namespace Slackiffy.Hubs
 
                 var connectionId = GetConnectionId();
 
-                this.conManager.Remove(conkey, connectionId);
+                conManager.Remove(conkey, connectionId);
 
                 await Clients.All.SendAsync("UserDisconnected", userEmail);
             }
-            
-            await base.OnDisconnectedAsync(exception);
+
+            await Task.CompletedTask;
         }
 
         private string GetConnectionId() => Context.ConnectionId;
