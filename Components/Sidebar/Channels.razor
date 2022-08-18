@@ -119,20 +119,23 @@
                 var userEmail = dataArray[0];
                 var userName = dataArray[1];
 
-                this.previousChatUserList.Add(new UsersForListingDTO
+                if(!this.previousChatUserList.Any(u => u.Email == userEmail))
                 {
-                    Email = userEmail,
-                    Username = userName
+                    this.previousChatUserList.Add(new UsersForListingDTO
+                    {
+                        Email = userEmail,
+                        Username = userName
 
-                });
+                    });
+                    
+                    InvokeAsync(() => StateHasChanged());
+                }                
             }
-
-            InvokeAsync(() => StateHasChanged());
         });
 
         hubConnection.On<string>("UserDisconnected", email =>
         {
-            var user = this.previousChatUserList.Where(user => user.Email == email).SingleOrDefault();
+            var user = this.previousChatUserList.Where(user => user.Email == email).FirstOrDefault();
 
             this.previousChatUserList.Remove(user);
             InvokeAsync(() => StateHasChanged());
