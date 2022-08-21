@@ -2,9 +2,11 @@
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Slackiffy.Data;
 using Slackiffy.Installers.Interface;
+using Slackiffy.Services.CacheService;
+using Slackiffy.Services.Messages;
 using Slackiffy.Services.Users;
+using Slackiffy.Utilities;
 using System.Linq;
 
 namespace Slackiffy.Installers
@@ -14,7 +16,7 @@ namespace Slackiffy.Installers
         public void InstallService(IServiceCollection service, IConfiguration Configuration)
         {
             service.AddScoped<CookiesProvider>();
-
+            service.AddAutoMapper(typeof(SlackiffyProfile));
             service.AddSignalR(config => config.EnableDetailedErrors = true);
             service.AddResponseCompression(opt =>
             {
@@ -22,7 +24,11 @@ namespace Slackiffy.Installers
             });
             service.AddRazorPages();
             service.AddServerSideBlazor();
+            service.AddMemoryCache();
+            service.AddSingleton<ICacheService, CacheService>();
+            service.AddScoped<IMessageService, MessageService>();
             service.AddScoped<IUserService, UserService>();
+
         }
     }
 }

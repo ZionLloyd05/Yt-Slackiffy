@@ -77,7 +77,7 @@
                <ul class="py-2">
                     @foreach (var user in previousChatUserList)
                     {
-                        var url = $"/client/DM-{user.Email}";
+                        var url = $"/client/DM-{user.Email}-{user.UserId}-{user.Username}";
                         <li class="py-2 pl-4 cursor-pointer hover:bg-neutral-900/50">
                             <NavLink class="nav-link flex text-white" href="@url">
                                 <span class="iconify mt-1 mr-2" data-icon="carbon:user-online" style="color: white;" data-width="20"></span>
@@ -128,19 +128,18 @@
         {
             foreach (var user in list)
             {
-                Debug.WriteLine(user);
-
                 var dataArray = user.Split("-");
                 var userEmail = dataArray[0];
                 var userName = dataArray[1];
+                var userId = Convert.ToInt32(dataArray[2]);
 
                 if(!this.previousChatUserList.Any(u => u.Email == userEmail))
                 {
                     this.previousChatUserList.Add(new UsersForListingDTO
                     {
                         Email = userEmail,
-                        Username = userName
-
+                        Username = userName,
+                        UserId = userId
                     });
                     
                 }                
@@ -157,6 +156,7 @@
             InvokeAsync(() => StateHasChanged());
         });
 
+        
         await hubConnection.StartAsync();
         await hubConnection.InvokeAsync("InitializeUserList");
     }

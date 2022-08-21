@@ -1,6 +1,6 @@
 ﻿<div class="flex justify-between p-4 border-b-2 border-neutral-900/25">
     <div class="flex align-center">
-        <h4 class="lowercase text-xl font-bold mr-2">#blazor-engineering</h4>
+        <h4 class="lowercase text-xl font-bold mr-2">@HeaderTitle</h4>
         <span class="iconify mt-1" data-icon="ei:star" data-width="20"></span>
     </div>
     <div class="flex">
@@ -8,3 +8,8 @@
         <p class="fot-bold text-sm">Details</p>
     </div>
 </div>
+
+@code {
+    [Parameter]
+    public string HeaderTitle { get; set; }
+}

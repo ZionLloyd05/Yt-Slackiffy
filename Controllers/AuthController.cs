@@ -39,7 +39,7 @@ namespace Slackiffy.Controllers
 
             string email = result.Principal.FindFirst(ClaimTypes.Email).Value;
 
-            var userInDb = await this.userService.GetUserByEmail(email);
+            var userInDb = await this.userService.GetUserByEmailAsync(email);
 
             if (userInDb == null)
             {

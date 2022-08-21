@@ -1,4 +1,7 @@
 ﻿@page "/"
+@page "/client/{resourceparam}"
+
+@using System.Security.Claims;
 
 <AuthorizeView>
     <NotAuthorized>
@@ -6,10 +9,17 @@
     </NotAuthorized>
 
     <Authorized>
-        <NavMenu imgUrl="@context.User.Claims.Where(user => user.Type == "picture").FirstOrDefault().Value"/>
-        <div class="flex h-screen w-full">
-            <Sidebar/>
-            <ChatContainer/>
-        </div>
+        <CascadingValue Value="@ResourceParam">
+            <NavMenu imgUrl="Images/1.jpg"/>
+            <div class="flex h-screen w-full">
+                <Sidebar/>
+                <ChatContainer UserEmail="@context.User.Claims.Where(user => user.Type == ClaimTypes.Email).FirstOrDefault().Value"/>
+            </div>
+        </CascadingValue>
     </Authorized>
 </AuthorizeView>
+
+@code {
+    [Parameter]
+    public string ResourceParam { get; set; } = String.Empty;
+}

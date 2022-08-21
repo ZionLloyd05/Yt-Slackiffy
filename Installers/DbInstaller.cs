@@ -10,7 +10,7 @@ namespace Slackiffy.Installers
     {
         public void InstallService(IServiceCollection service, IConfiguration Configuration)
         {
-            service.AddDbContext<SlackiffyDbContext>
+            service.AddDbContextPool<SlackiffyDbContext>
                 (opt => opt.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
         }
     }

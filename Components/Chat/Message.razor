@@ -2,9 +2,21 @@
     <img class="mr-2 h-14 rounded shadow" src="Images/1.jpg" />
     <div class="p-2">
         <div class="flex">
-            <h3 class="font-bold mr-2">Damilola Alagbala</h3>
+            <h3 class="font-bold mr-2">@Name</h3>
             <span class="uppercase text-xs font-light mt-1">6:30 PM</span>
         </div>
-        <p>Hello people, don't forget to like, subscribe and share!</p>
+        <p>@Text</p>
     </div>
 </div>
+
+@code {
+    [Parameter]
+    public string Name { get; set; }
+    [Parameter]
+    public string Text { get; set; }
+    [Parameter]
+    public string PictureUrl { get; set; }
+    [Parameter]
+    public DateTime CreatedAt { get; set; }
+
+}

@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 using Slackiffy.Data;
 using Slackiffy.Services.Users;
 using System;
@@ -46,9 +45,11 @@ namespace Slackiffy.Hubs
                 var userName = Context.User.Claims
                     .Where(claim => claim.Type == ClaimTypes.Name).FirstOrDefault().Value;
 
+                var userInDb = await this.userService.GetUserByEmailAsync(userEmail);
+
                 if (userEmail != null)
                 {
-                    var conkey = $"{userEmail}-{userName}";
+                    var conkey = $"{userEmail}-{userName}-{userInDb.Id}";
 
                     conManager.Add(conkey, connectionId);
                 }
@@ -59,7 +60,55 @@ namespace Slackiffy.Hubs
             {
                 await Task.CompletedTask;
             }
-           
+
+        }
+
+        public async Task SendMessage(string recieverEmail, string message)
+        {
+            var userName = Context.User.Claims
+                .Where(claim => claim.Type == ClaimTypes.Name).FirstOrDefault()?.Value;
+            var userEmail = Context.User.Claims
+                .Where(claim => claim.Type == ClaimTypes.Email).FirstOrDefault()?.Value;
+            var userPics = Context.User.Claims
+               .Where(claim => claim.Type == "picture").FirstOrDefault()?.Value;
+
+            var msgSender = await this.userService.GetUserByEmailAsync(userEmail);
+            var senderKey = $"{userEmail}-{userName}-{msgSender.Id}";
+            var msgReciever = await this.userService.GetUserByEmailAsync(recieverEmail);
+            var recieverkey = $"{msgReciever.Email}-{msgReciever.Username}-{msgReciever.Id}";
+
+            var msgPack = new Models.DTOs.MessagePack()
+            {
+                UserName = userName,
+                Message = message,
+                Picture = userPics,
+                CreatedAt = DateTime.Now,
+            };
+                       
+            var recieverConnectionIds = conManager.GetConnections(recieverkey);
+            var senderConnectionIds = conManager.GetConnections(senderKey);
+
+            if (recieverkey == senderKey)
+            {
+
+                foreach (var connId in recieverConnectionIds)
+                {
+                    await Clients.Client(connId).SendAsync("RecievePrivateMessage", msgPack);
+                }
+            }
+            else
+            {
+
+                foreach (var connId in recieverConnectionIds)
+                {
+                    await Clients.Client(connId).SendAsync("RecievePrivateMessage", msgPack);
+                }
+
+                foreach (var connId in senderConnectionIds)
+                {
+                    await Clients.Client(connId).SendAsync("RecievePrivateMessage", msgPack);
+                }
+            }
         }
 
         public override async Task OnDisconnectedAsync(Exception exception)
@@ -68,10 +117,12 @@ namespace Slackiffy.Hubs
                 .Where(claim => claim.Type == ClaimTypes.Email).FirstOrDefault()?.Value;
             var userName = Context.User.Claims
                 .Where(claim => claim.Type == ClaimTypes.Name).FirstOrDefault()?.Value;
+            
+            var user = await this.userService.GetUserByEmailAsync(userEmail);
 
-            if(userEmail != null)
+            if (userEmail != null)
             {
-                var conkey = $"{userEmail}-{userName}";
+                var conkey = $"{userEmail}-{userName}-{user.Id}";
 
                 var connectionId = GetConnectionId();
 

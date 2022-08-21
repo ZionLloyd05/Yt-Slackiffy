@@ -6,9 +6,9 @@ namespace Slackiffy.Services.Users
 {
     public interface IUserService
     {
-        ValueTask<User> RegisterUser(User user);
-        ValueTask<User> GetUserById(int Id);
-        ValueTask<User> GetUserByEmail(string email);
-        ValueTask<ICollection<User>> GetAllUsers();
+        Task<User> RegisterUser(User user);
+        Task<User> GetUserById(int Id);
+        Task<User> GetUserByEmailAsync(string email);
+        Task<ICollection<User>> GetAllUsers();
     }
 }

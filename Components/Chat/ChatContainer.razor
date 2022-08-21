@@ -1,27 +1,146 @@
-﻿<div class="w-3/4 mt-[60px]">
-    <div class="flex flex-col">
-          <ChatHeader/>
-        <div class="flex h-[35rem] overflow-y-scroll scrollbar relative flex-col-reverse">
-            <Message/>
-            <Message/>
-            <Message/>
-            <Message/>
-            <Message/>
-            <Message/>
-            <Message/>
-            <Message/>
-            <Message/>
-            <Message/>
-            <Message/>
-            <Message/>
-            <Message/>
-            <Message/>
-            <Message/>
-            <Message/>
-            <Message/>
-            <Message/>
-            <Message/>
+﻿@using AutoMapper
+@using Slackiffy.Models
+@using Slackiffy.Services.Messages
+@using Slackiffy.Services.Users
+@using Slackiffy.Extensions;
+@using Microsoft.AspNetCore.SignalR
+@using Microsoft.AspNetCore.SignalR.Client
+@using Slackiffy.Models.DTOs
+@using System.Security.Claims;
+@using System.Net
+@using System.Diagnostics
+@inject NavigationManager NavigationManager
+@implements IAsyncDisposable
+@inject IUserService userService
+@inject IMessageService messageService
+@inject IMapper mapper
+
+<AuthorizeView>
+    <div UserEmail="@UserEmail" class="w-3/4 mt-[60px]">
+        <div class="flex flex-col">
+            <ChatHeader HeaderTitle="@ChatHeadTitle"/>
+            <div class="flex h-[550px] overflow-y-scroll scrollbar relative flex-col-reverse">
+                @if (userMessages.Count() < 1)
+                {
+                    if (String.IsNullOrEmpty(ResourceParam))
+                    {
+                        <div class="m-auto text-center">
+                            <img class="w-48" src="Images/slack.png" />
+                            <h2>Welcome to Slack Messanger</h2>
+                        </div>
+                    }
+                    else
+                    {
+                        @if (this.isLoading)
+                        {
+                            <Grid Size="80px" class="m-auto" Color="#2B092A"/>
+                        }else{
+                            <p class="m-auto">No conversation yet, start talking ☕</p>
+                        }
+                    }                    
+                }
+                @foreach (var msg in userMessages)
+                {
+                   <Message Text="@msg.Message" Name="@msg.UserName" PictureUrl="@msg.Picture"/>
+                }
+            </div>
+        
+            <ChatInput userEmail="@UserEmail"/>
         </div>
-        <ChatInput/>
     </div>
-</div>
+</AuthorizeView>
+
+@code {
+    [CascadingParameter]
+    public string ResourceParam { get; set; } = String.Empty;
+    [Parameter]
+    public string UserEmail { get; set; }
+    public string PreviousResourceParam { get; set; }
+    private List<MessagePack> userMessages = new();
+    private bool isLoading = true;
+
+    [Inject]
+    public CookiesProvider cookiesProvider { get; set; }
+
+    private HubConnection hubConnection;
+
+    public string ChatHeadTitle { get; set; } = "Slacking with blazor, signalr & tailwindcss";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var container = new CookieContainer();
+        var cookie = new Cookie()
+            {
+                Name = "SlackiffyAuthCookie",
+                Domain = "localhost",
+                Value = cookiesProvider.Cookie
+            };
+
+        container.Add(cookie);
+
+        if (cookiesProvider.Cookie == null)
+        {
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(NavigationManager.ToAbsoluteUri("/chat"))
+                .Build();
+        }
+        else
+        {
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(NavigationManager.ToAbsoluteUri("/chat"), option => option.Cookies = container)
+                .Build();
+        }
+
+        hubConnection.On<MessagePack>("RecievePrivateMessage", msgPack =>
+        {
+            this.userMessages.Add(msgPack);
+
+            this.userMessages = this.userMessages.OrderByDescending(msg => msg.CreatedAt).ToList();
+            InvokeAsync(() => StateHasChanged());
+        });
+
+        await hubConnection.StartAsync();
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        ICollection<Models.Message> messages = new List<Models.Message>();
+        ICollection<MessagePack> msgPks = new List<MessagePack>();
+
+        if (this.ResourceParam == this.PreviousResourceParam) return;
+
+        this.PreviousResourceParam = this.ResourceParam;
+
+        var resourceArray = this.ResourceParam.Split("-");
+        var resourceKey = resourceArray[0];
+        var resourceEmail = resourceArray[1];
+        var resourceId = Convert.ToInt32(resourceArray[2]);
+        var resourceName = resourceArray[3];
+
+        var sender = await this.userService.GetUserByEmailAsync(UserEmail);
+        messages = await this.messageService.GetConversations(sender.Id, resourceId);
+        msgPks = this.mapper.Map<ICollection<Models.Message>, ICollection<MessagePack>>(messages);
+
+        this.userMessages = msgPks.ToList();
+         this.isLoading = false;
+
+        switch (resourceKey)
+        {
+            case "DM":
+                this.ChatHeadTitle = resourceName.ToSentenceCase();
+                StateHasChanged();
+                break;
+            case "CH":
+                break;
+            default:
+                break;
+        }
+    }
+    
+    public async ValueTask DisposeAsync(){
+        if(hubConnection is not null){
+            await hubConnection.DisposeAsync();
+        }
+    }
+}
